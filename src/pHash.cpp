@@ -3,7 +3,7 @@
     pHash, the open source perceptual hash library
     Copyright (C) 2009 Aetilius, Inc.
     All rights reserved.
- 
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -38,14 +38,14 @@ int ph_num_threads()
 		numCPU = sysconf( _SC_NPROCESSORS_ONLN );
 #else
 		int mib[2];
-		size_t len; 
+		size_t len;
 
 		mib[0] = CTL_HW;
 		mib[1] = HW_AVAILCPU;
 
 		sysctl(mib, 2, &numCPU, &len, NULL, 0);
 
-		if( numCPU < 1 ) 
+		if( numCPU < 1 )
 		{
      			mib[1] = HW_NCPU;
      			sysctl( mib, 2, &numCPU, &len, NULL, 0 );
@@ -66,7 +66,7 @@ char phash_version[255] = {0};
 const char* ph_about(){
 	if(phash_version[0] != 0)
 		return phash_version;
-	
+
 	snprintf(phash_version, sizeof(phash_version), phash_project, PACKAGE_STRING);
 	return phash_version;
 }
@@ -123,7 +123,7 @@ int ph_radon_projections(const CImg<uint8_t> &img,int N,Projections &projs){
 		*ptr_radon_map->data(k-j,x) = img(-yd+y_off,-(x-y_off)+y_off);
                 nb_per_line[k-j] += 1;
 	    }
-            
+
 	}
         j += 2;
     }
@@ -168,7 +168,7 @@ int ph_feature_vector(const Projections &projs, Features &fv)
     }
 
     return EXIT_SUCCESS;
-} 
+}
 int ph_dct(const Features &fv,Digest &digest)
 {
     int N = fv.size;
@@ -202,13 +202,13 @@ int ph_dct(const Features &fv,Digest &digest)
         if (D_temp[k] < min)
             min = D_temp[k];
     }
-       
+
     for (int i=0;i<nb_coeffs;i++){
 
 	D[i] = (uint8_t)(UCHAR_MAX*(D_temp[i] - min)/(max - min));
 
     }
-    
+
     return EXIT_SUCCESS;
 }
 
@@ -256,7 +256,7 @@ int ph_crosscorr(const Digest &x,const Digest &y,double &pcc,double threshold){
 #endif
 
 int _ph_image_digest(const CImg<uint8_t> &img,double sigma, double gamma,Digest &digest, int N){
-    
+
     int result = EXIT_FAILURE;
     CImg<uint8_t> graysc;
     if (img.spectrum() >= 3){
@@ -268,23 +268,23 @@ int _ph_image_digest(const CImg<uint8_t> &img,double sigma, double gamma,Digest 
     else {
 	return result;
     }
-	
- 
+
+
     graysc.blur((float)sigma);
- 
+
     (graysc/graysc.max()).pow(gamma);
-     
+
     Projections projs;
     if (ph_radon_projections(graysc,N,projs) < 0)
 	goto cleanup;
- 
+
     Features features;
     if (ph_feature_vector(projs,features) < 0)
 	goto cleanup;
-    
+
     if (ph_dct(features,digest) < 0)
         goto cleanup;
- 
+
     result = EXIT_SUCCESS;
 
 cleanup:
@@ -298,7 +298,7 @@ cleanup:
 #define max(a,b) (((a)>(b))?(a):(b))
 
 int ph_image_digest(const char *file, double sigma, double gamma, Digest &digest, int N){
-    
+
     CImg<uint8_t> src(file);
 	int res = -1;
     		int result = _ph_image_digest(src,sigma,gamma,digest,N);
@@ -334,7 +334,7 @@ int ph_compare_images(const char *file1, const char *file2,double &pcc, double s
 
     CImg<uint8_t> *imA = new CImg<uint8_t>(file1);
     CImg<uint8_t> *imB = new CImg<uint8_t>(file2);
-    
+
     int res = _ph_compare_images(*imA,*imB,pcc,sigma,gamma,N,threshold);
 
     delete imA;
@@ -344,7 +344,7 @@ int ph_compare_images(const char *file1, const char *file2,double &pcc, double s
 
 CImg<float>* ph_dct_matrix(const int N){
     CImg<float> *ptr_matrix = new CImg<float>(N,N,1,1,1/sqrt((float)N));
-    const float c1 = sqrt(2.0/N); 
+    const float c1 = sqrt(2.0/N);
     for (int x=0;x<N;x++){
 	for (int y=1;y<N;y++){
 	    *ptr_matrix->data(x,y) = c1*cos((cimg::PI/2/N)*y*(2*x+1));
@@ -369,9 +369,9 @@ int ph_dct_imagehash(const char* file,ulong64 &hash){
     if (src.spectrum() == 3){
         img = src.RGBtoYCbCr().channel(0).get_convolve(meanfilter);
     } else if (src.spectrum() == 4){
-	int width = img.width();
-        int height = img.height();
-        int depth = img.depth();
+	int width = src.width();
+        int height = src.height();
+        int depth = src.depth();
 	img = src.crop(0,0,0,0,width-1,height-1,depth-1,2).RGBtoYCbCr().channel(0).get_convolve(meanfilter);
     } else {
 	img = src.channel(0).get_convolve(meanfilter);
@@ -384,7 +384,7 @@ int ph_dct_imagehash(const char* file,ulong64 &hash){
     CImg<float> dctImage = (*C)*img*Ctransp;
 
     CImg<float> subsec = dctImage.crop(1,1,8,8).unroll('x');;
-   
+
     float median = subsec.median();
     ulong64 one = 0x0000000000000001;
     hash = 0x0000000000000000;
@@ -394,7 +394,7 @@ int ph_dct_imagehash(const char* file,ulong64 &hash){
 	    hash |= one;
 	one = one << 1;
     }
-  
+
     delete C;
 
     return 0;
@@ -483,7 +483,7 @@ CImgList<uint8_t>* ph_getKeyFramesFromVideo(const char *filename){
     if (N < 0){
 	return NULL;
     }
-    
+
     float frames_per_sec = 0.5*fps(filename);
     if (frames_per_sec < 0){
 	return NULL;
@@ -616,7 +616,7 @@ CImgList<uint8_t>* ph_getKeyFramesFromVideo(const char *filename){
     do {
 	/* find next boundary */
 	do {end++;} while ((bnds[end]!=1)&&(end < nbframes));
-       
+
 	/* find min disparity within bounds */
 	int minpos = start+1;
 	for (int i=start+1; i < end;i++){
@@ -890,7 +890,7 @@ uint8_t* ph_mh_imagehash(const char *filename, int &N,float alpha, float lvl){
 				}
 				bit_index++;
 				if ((bit_index%8) == 0){
-					hash_index = (int)(bit_index/8) - 1; 
+					hash_index = (int)(bit_index/8) - 1;
 					hash[hash_index] = hashbyte;
 					hashbyte = 0x00;
 				}
@@ -914,7 +914,7 @@ char** ph_readfilenames(const char *dirname,int &count){
 	if (strcmp(dir_entry->d_name, ".") && strcmp(dir_entry->d_name,".."))
 	    count++;
     }
-    
+
     /* alloc list of files */
     char **files = (char**)malloc(count*sizeof(*files));
     if (!files)
@@ -987,7 +987,7 @@ TxtHashPoint* ph_texthash(const char *filename,int *nbpoints){
     count = (int)(0.01*count);
     int d;
     ulong64 hashword = 0ULL;
-    
+
     TxtHash = (TxtHashPoint*)malloc(count*sizeof(struct ph_hash_point));
     if (!TxtHash){
 	return NULL;
@@ -1008,7 +1008,7 @@ TxtHashPoint* ph_texthash(const char *filename,int *nbpoints){
 	    continue;
 	if ((d >= 65)&&(d<=90))       /*convert upper to lower case */
 	    d = d + 32;
-      
+
 	kgram[i] = (char)d;
         hashword = hashword << delta;   /* rotate left or shift left ??? */
         hashword = hashword^textkeys[d];/* right now, rotate breaks it */
@@ -1060,7 +1060,7 @@ TxtHashPoint* ph_texthash(const char *filename,int *nbpoints){
 		    minhash.index = WinHash[i%WindowLength].index;
 		}
 	    }
-            if (minhash.hash != prev_minhash.hash){	 
+            if (minhash.hash != prev_minhash.hash){
 		TxtHash[(*nbpoints)].hash = minhash.hash;
 		TxtHash[(*nbpoints)++].index = minhash.index;
 		prev_minhash.hash = minhash.hash;
